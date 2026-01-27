@@ -36,6 +36,13 @@ public class YouTubeProxyService {
     private String baseUrl;
     
     /**
+     * Verifica se la chiave API è configurata
+     */
+    private boolean isApiKeyConfigured() {
+        return apiKey != null && !apiKey.isEmpty() && !apiKey.equals("${YOUTUBE_API_KEY}");
+    }
+    
+    /**
      * Cerca video su YouTube con cache
      */
     public String searchVideos(Map<String, String> params) {
@@ -47,6 +54,16 @@ public class YouTubeProxyService {
         if (cached.isPresent() && !cached.get().isExpired()) {
             log.info("Cache HIT per search query: {}", queryKey);
             return cached.get().getResponseJson();
+        }
+        
+        // Se la chiave API non è configurata, usa solo il database
+        if (!isApiKeyConfigured()) {
+            log.warn("API key non configurata. Modalità solo database attiva.");
+            if (cached.isPresent()) {
+                log.info("Restituisco dati scaduti dalla cache per query: {}", queryKey);
+                return cached.get().getResponseJson();
+            }
+            throw new IllegalStateException("Dati non disponibili nel database e API key non configurata");
         }
         
         // Se non trovato o scaduto, chiama l'API di YouTube
@@ -75,6 +92,16 @@ public class YouTubeProxyService {
         if (cached.isPresent() && !cached.get().isExpired()) {
             log.info("Cache HIT per video: {}", videoId);
             return cached.get().getResponseJson();
+        }
+        
+        // Se la chiave API non è configurata, usa solo il database
+        if (!isApiKeyConfigured()) {
+            log.warn("API key non configurata. Modalità solo database attiva.");
+            if (cached.isPresent()) {
+                log.info("Restituisco dati scaduti dalla cache per video: {}", videoId);
+                return cached.get().getResponseJson();
+            }
+            throw new IllegalStateException("Dati non disponibili nel database e API key non configurata");
         }
         
         // Se non trovato o scaduto, chiama l'API di YouTube

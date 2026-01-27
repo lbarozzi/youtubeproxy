@@ -51,6 +51,12 @@ public class YouTubeProxyController {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(response);
+        } catch(IllegalStateException ops){
+            // Special Case: API Key non configurata e dati mancanti nel DB
+            log.info("API Key non configurata o dati non trovati nel DB per la richiesta: {}", params);
+            return ResponseEntity.status(204)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{}");
         } catch (Exception e) {
             log.error("Errore nella chiamata search API: ", e);
             return ResponseEntity.status(500)

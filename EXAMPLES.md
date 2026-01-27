@@ -1,27 +1,50 @@
 # Esempi di Utilizzo - YouTube Proxy API
 
+## � Setup Iniziale
+
+Prima di tutto, genera un'API-KEY per autenticarti:
+
+```bash
+# Genera una nuova API-KEY
+curl -X POST "http://localhost:8080/api/keys/generate?description=MiaApplicazione&daysValid=365"
+
+# Risposta
+{
+  "key": "ypx_a1b2c3d4e5f6789...",
+  "description": "MiaApplicazione",
+  "createdAt": "2026-01-27T10:00:00",
+  "expiresAt": "2027-01-27T10:00:00",
+  "isActive": true
+}
+```
+
+Salva la chiave generata e usala in tutte le richieste successive.
+
 ## 🔄 Come Replacement Diretto delle API Google
 
-Questo proxy è un **drop-in replacement** delle API di Google YouTube. Basta cambiare l'URL base.
+Questo proxy è un **drop-in replacement** delle API di Google YouTube. Basta cambiare l'URL base e aggiungere l'autenticazione.
 
 ### Prima: API Google dirette
 
 ```bash
 # Search
-curl "https://www.googleapis.com/youtube/v3/search?part=snippet&q=spring+boot&key=YOUR_KEY"
+curl "https://www.googleapis.com/youtube/v3/search?part=snippet&q=spring+boot&key=YOUR_YOUTUBE_KEY"
 
 # Videos
-curl "https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=VIDEO_ID&key=YOUR_KEY"
+curl "https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=VIDEO_ID&key=YOUR_YOUTUBE_KEY"
 ```
 
-### Dopo: Con il proxy (identico)
+### Dopo: Con il proxy (con autenticazione interna)
 
 ```bash
+# Imposta la tua API-KEY interna
+API_KEY="ypx_a1b2c3d4e5f6789..."
+
 # Search (stesso endpoint, stesso formato)
-curl "http://localhost:8080/youtube/v3/search?part=snippet&q=spring+boot"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/youtube/v3/search?part=snippet&q=spring+boot"
 
 # Videos (stesso endpoint, stesso formato)
-curl "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=VIDEO_ID"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=VIDEO_ID"
 ```
 
 ---
@@ -31,31 +54,37 @@ curl "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=VIDEO_I
 ### 1. Cerca video per keyword
 
 ```bash
+API_KEY="ypx_..."
+
 # Cerca "Python tutorial"
-curl "http://localhost:8080/youtube/v3/search?part=snippet&q=python+tutorial&maxResults=5&type=video"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/youtube/v3/search?part=snippet&q=python+tutorial&maxResults=5&type=video"
 
 # Cerca con filtri avanzati
-curl "http://localhost:8080/youtube/v3/search?part=snippet&q=java&maxResults=10&order=viewCount&type=video&videoDuration=medium"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/youtube/v3/search?part=snippet&q=java&maxResults=10&order=viewCount&type=video&videoDuration=medium"
 ```
 
 ### 2. Ottieni dettagli di un video
 
 ```bash
+API_KEY="ypx_..."
+
 # Dettagli base
-curl "http://localhost:8080/youtube/v3/videos?part=snippet&id=dQw4w9WgXcQ"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/youtube/v3/videos?part=snippet&id=dQw4w9WgXcQ"
 
 # Con statistiche
-curl "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=dQw4w9WgXcQ"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=dQw4w9WgXcQ"
 
 # Con tutto (snippet, statistics, contentDetails)
-curl "http://localhost:8080/youtube/v3/videos?part=snippet,statistics,contentDetails&id=dQw4w9WgXcQ"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/youtube/v3/videos?part=snippet,statistics,contentDetails&id=dQw4w9WgXcQ"
 ```
 
 ### 3. Multiple video IDs
 
 ```bash
+API_KEY="ypx_..."
+
 # Ottieni dettagli di più video contemporaneamente
-curl "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=VIDEO_ID1,VIDEO_ID2,VIDEO_ID3"
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=VIDEO_ID1,VIDEO_ID2,VIDEO_ID3"
 ```
 
 ---
@@ -67,18 +96,27 @@ curl "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=VIDEO_I
 ```javascript
 // Configurazione
 const YOUTUBE_API_BASE = 'http://localhost:8080/youtube/v3';
+const API_KEY = 'ypx_a1b2c3d4e5f6789...'; // La tua API-KEY interna
 
 // Funzione di ricerca
 async function searchVideos(query, maxResults = 10) {
     const url = `${YOUTUBE_API_BASE}/search?part=snippet&q=${encodeURIComponent(query)}&maxResults=${maxResults}&type=video`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        headers: {
+            'X-API-Key': API_KEY
+        }
+    });
     return response.json();
 }
 
 // Funzione per dettagli video
 async function getVideoDetails(videoId) {
     const url = `${YOUTUBE_API_BASE}/videos?part=snippet,statistics&id=${videoId}`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        headers: {
+            'X-API-Key': API_KEY
+        }
+    });
     return response.json();
 }
 
@@ -97,6 +135,7 @@ import requests
 
 # Configurazione
 YOUTUBE_API_BASE = 'http://localhost:8080/youtube/v3'
+API_KEY = 'ypx_a1b2c3d4e5f6789...'  # La tua API-KEY interna
 
 def search_videos(query, max_results=10):
     """Cerca video su YouTube"""
@@ -107,7 +146,8 @@ def search_videos(query, max_results=10):
         'maxResults': max_results,
         'type': 'video'
     }
-    response = requests.get(url, params=params)
+    headers = {'X-API-Key': API_KEY}
+    response = requests.get(url, params=params, headers=headers)
     return response.json()
 
 def get_video_details(video_id):
@@ -117,7 +157,8 @@ def get_video_details(video_id):
         'part': 'snippet,statistics',
         'id': video_id
     }
-    response = requests.get(url, params=params)
+    headers = {'X-API-Key': API_KEY}
+    response = requests.get(url, params=params, headers=headers)
     return response.json()
 
 # Utilizzo
@@ -133,13 +174,23 @@ print(f"Views: {stats['viewCount']}, Likes: {stats['likeCount']}")
 ### Java (Spring RestTemplate)
 
 ```java
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class YouTubeProxyClient {
     
     private static final String BASE_URL = "http://localhost:8080/youtube/v3";
+    private static final String API_KEY = "ypx_a1b2c3d4e5f6789..."; // La tua API-KEY interna
     private final RestTemplate restTemplate = new RestTemplate();
+    
+    private HttpHeaders createHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-API-Key", API_KEY);
+        return headers;
+    }
     
     public String searchVideos(String query, int maxResults) {
         String url = UriComponentsBuilder
@@ -150,7 +201,8 @@ public class YouTubeProxyClient {
             .queryParam("type", "video")
             .toUriString();
         
-        return restTemplate.getForObject(url, String.class);
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+        return restTemplate.exchange(url, HttpMethod.GET, entity, String.class).getBody();
     }
     
     public String getVideoDetails(String videoId) {
@@ -160,7 +212,8 @@ public class YouTubeProxyClient {
             .queryParam("id", videoId)
             .toUriString();
         
-        return restTemplate.getForObject(url, String.class);
+        HttpEntity<String> entity = new HttpEntity<>(createHeaders());
+        return restTemplate.exchange(url, HttpMethod.GET, entity, String.class).getBody();
     }
 }
 ```
@@ -172,11 +225,13 @@ public class YouTubeProxyClient {
 ### Statistiche dal database
 
 ```bash
+API_KEY="ypx_..."
+
 # Statistiche di un video specifico
-curl "http://localhost:8080/api/statistics/video/dQw4w9WgXcQ" | jq
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/api/statistics/video/dQw4w9WgXcQ" | jq
 
 # Tutti i video cachati
-curl "http://localhost:8080/api/statistics/videos" | jq
+curl -H "X-API-Key: $API_KEY" "http://localhost:8080/api/statistics/videos" | jq
 
 # Top 10 video più visti
 curl "http://localhost:8080/api/statistics/top-viewed?limit=10" | jq

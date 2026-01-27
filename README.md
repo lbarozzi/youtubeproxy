@@ -11,7 +11,16 @@ Sostituisci semplicemente:
 - **⚡ Cache intelligente**: I risultati vengono memorizzati nel database H2 per 24 ore
 - **📊 Estrazione statistiche**: Views, likes, commenti vengono salvati in campi dedicati
 - **🔍 API di analytics**: Endpoint aggiuntivi per analisi dei dati cachati
+- **🔐 Autenticazione interna**: Sistema di API-KEY per proteggere l'accesso alle API del proxy
 - **🎯 Zero configurazione client**: Cambia solo l'URL base, tutto il resto rimane identico
+
+## 📚 Documentazione
+
+- **[README.md](README.md)** - Panoramica generale e quick start
+- **[API-KEYS.md](API-KEYS.md)** - 🔐 Guida completa al sistema di autenticazione con API-KEY
+- **[EXAMPLES.md](EXAMPLES.md)** - Esempi pratici di integrazione (JavaScript, Python, Java)
+- **[HELP.md](HELP.md)** - Guida ai test e risoluzione problemi
+- **[test-api.sh](test-api.sh)** - Script bash per testare le API
 
 ## 🚀 Come usare come Replacement
 
@@ -23,11 +32,18 @@ curl "https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=VI
 
 ### Dopo (con questo proxy)
 ```bash
-curl "http://localhost:8080/youtube/v3/search?part=snippet&q=spring+boot"
-curl "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=VIDEO_ID"
+# Genera prima una API-KEY interna
+curl -X POST "http://localhost:8080/api/keys/generate?description=MyApp"
+
+# Usa l'API-KEY generata
+curl -H "X-API-Key: ypx_..." "http://localhost:8080/youtube/v3/search?part=snippet&q=spring+boot"
+curl -H "X-API-Key: ypx_..." "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=VIDEO_ID"
 ```
 
-**Nota**: Il parametro `key` è opzionale. Se non fornito, usa quello configurato nell'applicazione.
+**⚠️ Importante**: 
+- Tutte le richieste agli endpoint `/youtube/*` e `/api/statistics/*` richiedono un'API-KEY interna
+- L'API-KEY va fornita nell'header `X-API-Key` o come parametro `api_key`
+- Il parametro `key` di YouTube (se presente) viene rimosso e NON usato per YouTube
 
 ### Integrazione con il codice esistente
 
@@ -74,9 +90,68 @@ export YOUTUBE_API_KEY="la-tua-api-key"
 
 L'applicazione sarà disponibile su `http://localhost:8080`
 
+## 🔐 Autenticazione
+
+### Generare una API-KEY
+
+Prima di usare le API del proxy, devi generare un'API-KEY:
+
+```bash
+curl -X POST "http://localhost:8080/api/keys/generate?description=MyApplication&daysValid=365"
+```
+
+**Risposta:**
+```json
+{
+  "key": "ypx_a1b2c3d4e5f6789...",
+  "description": "MyApplication",
+  "createdAt": "2026-01-27T10:00:00",
+  "expiresAt": "2027-01-27T10:00:00",
+  "isActive": true
+}
+```
+
+### Usare l'API-KEY
+
+Fornisci l'API-KEY in uno dei seguenti modi:
+
+**1. Header HTTP (raccomandato):**
+```bash
+curl -H "X-API-Key: ypx_..." "http://localhost:8080/youtube/v3/search?part=snippet&q=java"
+```
+
+**2. Query Parameter:**
+```bash
+curl "http://localhost:8080/youtube/v3/search?api_key=ypx_...&part=snippet&q=java"
+```
+
 ## Endpoints
 
+### Gestione API-KEY
+
+#### Generare una nuova API-KEY
+**POST** `/api/keys/generate`
+- `description` (opzionale): Descrizione della chiave
+- `daysValid` (opzionale): Giorni di validità (default: mai scade)
+
+#### Elencare tutte le API-KEY
+**GET** `/api/keys`
+
+#### Dettagli di una API-KEY
+**GET** `/api/keys/{id}`
+
+#### Disattivare una API-KEY
+**PUT** `/api/keys/{id}/deactivate`
+
+#### Riattivare una API-KEY
+**PUT** `/api/keys/{id}/activate`
+
+#### Eliminare una API-KEY
+**DELETE** `/api/keys/{id}`
+
 ### API YouTube (Replacement Diretto)
+
+⚠️ **Richiedono autenticazione con API-KEY**
 
 Questi endpoint sono **identici al 100%** alle API di Google YouTube:
 
@@ -119,11 +194,13 @@ Ottiene dettagli di uno o più video. I risultati vengono cachati con estrazione
 
 **Esempio:**
 ```bash
-# Identico alle API Google, ma con cache automatica
-curl "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=dQw4w9WgXcQ"
+# Identico alle API Google, ma con cache automatica e autenticazione
+curl -H "X-API-Key: ypx_..." "http://localhost:8080/youtube/v3/videos?part=snippet,statistics&id=dQw4w9WgXcQ"
 ```
 
 ### API aggiuntive per Analytics
+
+⚠️ **Richiedono autenticazione con API-KEY**
 
 Le statistiche vengono estratte automaticamente dal JSON delle API YouTube e salvate in campi dedicati del database.
 
