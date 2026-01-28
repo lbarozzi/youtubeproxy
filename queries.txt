@@ -1,0 +1,46 @@
+# YouTube Proxy - File Query
+# Una query per riga. I commenti iniziano con #
+# Lo script aggiunge automaticamente "music video" a ogni query
+
+# Classic Rock
+Led Zeppelin
+Pink Floyd
+Queen
+The Beatles
+Rolling Stones
+The Who
+The Doors
+
+# Hard Rock / Metal
+AC/DC
+Metallica
+Iron Maiden
+Black Sabbath
+Deep Purple
+Judas Priest
+Motorhead
+
+# Southern Rock / Blues Rock
+ZZ TOP
+Lynyrd Skynyrd
+Allman Brothers
+Stevie Ray Vaughan
+
+# Progressive Rock
+Yes
+Genesis
+King Crimson
+Rush
+
+# Grunge / Alternative
+Nirvana
+Pearl Jam
+Soundgarden
+Alice in Chains
+
+# Pop / Rock
+U2
+Coldplay
+Radiohead
+Red Hot Chili Peppers
+Foo Fighters
