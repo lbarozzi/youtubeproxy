@@ -1,15 +1,22 @@
 package efohum.com.youtubeproxy.controller;
 
-import efohum.com.youtubeproxy.entity.CachedVideo;
-import efohum.com.youtubeproxy.repository.CachedVideoRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import efohum.com.youtubeproxy.entity.CachedVideo;
+import efohum.com.youtubeproxy.repository.CachedSearchResultRepository;
+import efohum.com.youtubeproxy.repository.CachedVideoRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controller per accedere alle statistiche dei video cachati
@@ -21,6 +28,7 @@ import java.util.Map;
 public class StatisticsController {
     
     private final CachedVideoRepository videoRepository;
+    private final CachedSearchResultRepository searchResultRepository;
     
     /**
      * GET /api/statistics/video/{videoId}
@@ -152,5 +160,50 @@ public class StatisticsController {
         summary.put("totalComments", totalComments);
         
         return ResponseEntity.ok(summary);
+    }
+    
+    /**
+     * DELETE /api/statistics/cache/clear
+     * Pulisce tutta la cache (search e video)
+     * Utile dopo modifiche al sistema di caching
+     */
+    @DeleteMapping("/cache/clear")
+    public ResponseEntity<Map<String, Object>> clearCache() {
+        log.warn("Richiesta pulizia cache completa");
+        
+        long searchCount = searchResultRepository.count();
+        long videoCount = videoRepository.count();
+        
+        searchResultRepository.deleteAll();
+        videoRepository.deleteAll();
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("message", "Cache pulita con successo");
+        result.put("searchResultsDeleted", searchCount);
+        result.put("videosDeleted", videoCount);
+        
+        log.info("Cache pulita: {} search results, {} videos eliminati", searchCount, videoCount);
+        
+        return ResponseEntity.ok(result);
+    }
+    
+    /**
+     * DELETE /api/statistics/cache/search
+     * Pulisce solo la cache delle ricerche
+     */
+    @DeleteMapping("/cache/search")
+    public ResponseEntity<Map<String, Object>> clearSearchCache() {
+        log.warn("Richiesta pulizia cache search");
+        
+        long count = searchResultRepository.count();
+        searchResultRepository.deleteAll();
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("message", "Cache search pulita con successo");
+        result.put("deleted", count);
+        
+        log.info("Cache search pulita: {} record eliminati", count);
+        
+        return ResponseEntity.ok(result);
     }
 }

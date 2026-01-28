@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/youtube/v3")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS})
 public class YouTubeProxyController {
     
     private final YouTubeProxyService youTubeProxyService;
@@ -49,19 +50,24 @@ public class YouTubeProxyController {
         try {
             String response = youTubeProxyService.searchVideos(params);
             return ResponseEntity.ok()
+                    .header("X-Cache-Source", "youtube-proxy")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(response);
-        } catch(IllegalStateException ops){
-            // Special Case: API Key non configurata e dati mancanti nel DB
-            log.info("API Key non configurata o dati non trovati nel DB per la richiesta: {}", params);
-            return ResponseEntity.status(204)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body("{}");
         } catch (Exception e) {
             log.error("Errore nella chiamata search API: ", e);
-            return ResponseEntity.status(500)
+            
+            // Determina il codice di errore appropriato
+            int statusCode = 500;
+            if (e.getMessage() != null) {
+                if (e.getMessage().contains("401")) statusCode = 401;
+                else if (e.getMessage().contains("403")) statusCode = 403;
+                else if (e.getMessage().contains("404")) statusCode = 404;
+            }
+            
+            return ResponseEntity.status(statusCode)
+                    .header("Access-Control-Allow-Origin", "*")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body("{\"error\": {\"message\": \"" + e.getMessage() + "\"}}");
+                    .body("{\"error\": {\"code\": " + statusCode + ", \"message\": \"" + e.getMessage() + "\"}}");
         }
     }
     
@@ -86,13 +92,20 @@ public class YouTubeProxyController {
         try {
             String response = youTubeProxyService.getVideoDetails(videoId, params);
             return ResponseEntity.ok()
+                    .header("X-Cache-Source", "youtube-proxy")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(response);
         } catch (Exception e) {
             log.error("Errore nella chiamata videos API: ", e);
-            return ResponseEntity.status(500)
+            
+            int statusCode = 500;
+            if (e.getMessage() != null && e.getMessage().contains("401")) {
+                statusCode = 401;
+            }
+            
+            return ResponseEntity.status(statusCode)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body("{\"error\": {\"message\": \"" + e.getMessage() + "\"}}");
+                    .body("{\"error\": {\"code\": " + statusCode + ", \"message\": \"" + e.getMessage() + "}}");
         }
     }
     

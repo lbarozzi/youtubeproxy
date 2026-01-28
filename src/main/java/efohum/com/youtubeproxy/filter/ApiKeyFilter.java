@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,9 +30,18 @@ public class ApiKeyFilter implements Filter {
     private final ApiKeyRepository apiKeyRepository;
     private final ObjectMapper objectMapper;
     
+    @Value("${api.security.enabled:false}")
+    private boolean securityEnabled;
+    
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
+        
+        // Se la sicurezza è disabilitata, passa oltre senza verifiche
+        if (!securityEnabled) {
+            chain.doFilter(request, response);
+            return;
+        }
         
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;

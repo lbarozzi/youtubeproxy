@@ -36,6 +36,16 @@ public class CachedSearchResult {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
     
+    // Metadati della ricerca per ricostruire risposte parziali
+    private String query; // Parametro q della ricerca
+    private String orderBy; // order parameter
+    private String videoType; // type parameter (video, channel, playlist)
+    private Integer maxResults; // Numero di risultati richiesti
+    private String nextPageToken;
+    private String prevPageToken;
+    private Integer totalResults;
+    private String regionCode;
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
