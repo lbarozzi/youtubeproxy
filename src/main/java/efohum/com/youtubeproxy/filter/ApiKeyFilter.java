@@ -89,7 +89,7 @@ public class ApiKeyFilter implements Filter {
         
         // Se non trovato, cerca nel query parameter api_key
         if (apiKey == null || apiKey.isEmpty()) {
-            apiKey = request.getParameter("api_key");
+            apiKey = request.getParameter("key");
         }
         
         return apiKey;

@@ -39,10 +39,18 @@ public class YouTubeProxyService {
     @Value("${youtube.api.base-url}")
     private String baseUrl;
     
+    @Value("${api.youtube.proxyonly:false}")
+    private boolean proxyOnlyMode;
+    
     /**
-     * Verifica se la chiave API è configurata
+     * Verifica se la chiave API è configurata e il proxy-only mode è disabilitato
      */
     private boolean isApiKeyConfigured() {
+        // Se proxy-only mode è attivo, comportati come se non ci fosse API key
+        if (proxyOnlyMode) {
+            log.debug("Proxy-only mode attivo: uso solo cache/database");
+            return false;
+        }
         return apiKey != null && !apiKey.isEmpty() && !apiKey.equals("${YOUTUBE_API_KEY}");
     }
     
