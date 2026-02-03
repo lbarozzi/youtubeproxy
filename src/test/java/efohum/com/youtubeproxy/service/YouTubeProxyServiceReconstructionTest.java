@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -104,10 +103,13 @@ public class YouTubeProxyServiceReconstructionTest {
         params.put("q", "java");
         params.put("maxResults", "5");
         
-        // Then: Dovrebbe lanciare eccezione
-        assertThrows(IllegalStateException.class, () -> {
-            service.searchVideos(params);
-        });
+        String result = service.searchVideos(params);
+        
+        // Then: Dovrebbe restituire una risposta vuota valida
+        assertNotNull(result);
+        assertTrue(result.contains("\"kind\":\"youtube#searchListResponse\""));
+        assertTrue(result.contains("\"items\":[]"));
+        assertTrue(result.contains("\"totalResults\":0"));
     }
     
     @Test

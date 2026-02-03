@@ -2,6 +2,7 @@ package efohum.com.youtubeproxy.service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -104,7 +105,10 @@ public class YouTubeProxyService {
         
         boolean isUpdate = cached.isPresent();
         if (isUpdate) {
-            newCache.setId(cached.get().getId());
+            CachedSearchResult existing = cached.get();
+            newCache.setId(existing.getId());
+            newCache.setCreatedAt(existing.getCreatedAt() != null ? existing.getCreatedAt() : LocalDateTime.now());
+            newCache.setExpiresAt(LocalDateTime.now().plusHours(24)); // Rinnova la scadenza
             log.info("Aggiornamento cache search esistente: queryKey={}, query='{}'", 
                 queryKey, newCache.getQuery());
         } else {
@@ -157,7 +161,10 @@ public class YouTubeProxyService {
         
         boolean isUpdate = cached.isPresent();
         if (isUpdate) {
-            newCache.setId(cached.get().getId());
+            CachedVideo existing = cached.get();
+            newCache.setId(existing.getId());
+            newCache.setCreatedAt(existing.getCreatedAt()); // Mantieni la data di creazione originale
+            newCache.setExpiresAt(LocalDateTime.now().plusHours(24)); // Rinnova la scadenza
             log.info("Aggiornamento cache video esistente: videoId={}, title='{}'", 
                 videoId, newCache.getTitle());
         } else {

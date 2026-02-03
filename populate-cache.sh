@@ -9,6 +9,14 @@ QUERIES_FILE="${1:-queries.txt}"
 MAX_RESULTS=50
 VIDEO_CATEGORY_ID=10
 DELAY_SECONDS="${DELAY:-1}"
+API_KEY="${API_KEY:-}"
+
+# Verifica API_KEY
+if [ -z "$API_KEY" ]; then
+    echo -e "${RED}❌ API_KEY non impostata. Imposta la variabile d'ambiente API_KEY.${NC}"
+    echo "Esempio: export API_KEY='ypx_tua_chiave'"
+    exit 1
+fi
 
 # Colori
 GREEN='\033[0;32m'
@@ -55,7 +63,7 @@ while IFS= read -r query || [ -n "$query" ]; do
     # Richiesta
     url="${API_BASE_URL}/youtube/v3/search?part=snippet&q=${encoded}&type=video&maxResults=${MAX_RESULTS}&videoCategoryId=${VIDEO_CATEGORY_ID}&pageToken="
     
-    response=$(curl -s -w "\n%{http_code}" -H "Origin: http://localhost:3000" "$url")
+    response=$(curl -s -w "\n%{http_code}" -H "Origin: http://localhost:3000" -H "X-API-Key: $API_KEY" "$url")
     http_code=$(tail -n1 <<< "$response")
     body=$(sed '$ d' <<< "$response")
     
